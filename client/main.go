@@ -4,9 +4,15 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"time"
 
+	"github.com/sithumonline/demedia-benchmark/models"
+
+	"github.com/olekukonko/tablewriter"
 	"github.com/sithumonline/demedia-nostr/host"
 	"github.com/sithumonline/demedia-nostr/keys"
 	"github.com/sithumonline/demedia-nostr/port"
@@ -14,6 +20,8 @@ import (
 )
 
 func main() {
+	var benchmarkData [][]string
+
 	b := make([]byte, 32)
 	rand.Read(b)
 	_, privKey, _, _, err := keys.GetKeys(hex.EncodeToString(b))
@@ -27,6 +35,7 @@ func main() {
 		log.Fatalf("failed to get host: %v", err)
 	}
 
+	start := time.Now()
 	reply, sandErr := ql.QlCall(h,
 		context.Background(),
 		nil,
@@ -38,6 +47,18 @@ func main() {
 	if sandErr != nil {
 		log.Panicf("error: failed to fetch: %s", sandErr.Error())
 	}
+	elapsed := time.Since(start)
 
-	log.Printf("reply: %s", reply)
+	var d []models.Todo
+	err = json.Unmarshal(reply.Data, &d)
+	if err != nil {
+		log.Fatalf("failed to unmarshal reply data: %v", err)
+	}
+
+	benchmarkData = append(benchmarkData, []string{"Ql", d[len(d)-1].Title, elapsed.String()})
+
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Method", "Load Time", "Response Time"})
+	table.AppendBulk(benchmarkData)
+	table.Render()
 }

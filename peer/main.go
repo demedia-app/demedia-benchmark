@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"time"
+
+	"github.com/sithumonline/demedia-benchmark/models"
 
 	gorpc "github.com/libp2p/go-libp2p-gorpc"
 	"github.com/sithumonline/demedia-nostr/host"
@@ -40,20 +43,16 @@ func (t *BridgeService) Ql(ctx context.Context, argType ql.BridgeArgs, replyType
 	}
 }
 
-type todo struct {
-	Id         string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Title      string `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
-	Task       string `protobuf:"bytes,3,opt,name=task,proto3" json:"task,omitempty"`
-	Signature  string `protobuf:"bytes,3,opt,name=signature,proto3" json:"signature,omitempty"`
-	IsVerified string `protobuf:"bytes,3,opt,name=is_verified,proto3" json:"is_verified,omitempty"`
-}
-
 func (t *BridgeService) getAllItem(replyType *ql.BridgeReply) error {
-	list := make([]todo, 0)
+	list := make([]models.Todo, 0)
+
+	start := time.Now()
 	if result := t.db.Find(&list); result.Error != nil {
 		log.Printf("failed to find todos: %v", result.Error)
 		return result.Error
 	}
+	elapsed := time.Since(start)
+	list = append(list, models.Todo{Id: "time", Title: elapsed.String()})
 
 	b, err := json.Marshal(list)
 	if err != nil {

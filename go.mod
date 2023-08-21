@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/libp2p/go-libp2p-gorpc v0.5.0
+	github.com/olekukonko/tablewriter v0.0.5
 	github.com/sithumonline/demedia-nostr v1.0.0-rc.1
 	gorm.io/driver/postgres v1.5.2
 	gorm.io/gorm v1.25.4
@@ -58,6 +59,7 @@ require (
 	github.com/libp2p/go-yamux/v4 v4.0.0 // indirect
 	github.com/marten-seemann/tcp v0.0.0-20210406111302-dfbc87cc63fd // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/miekg/dns v1.1.54 // indirect
 	github.com/mikioh/tcpinfo v0.0.0-20190314235526-30a79bb1804b // indirect
