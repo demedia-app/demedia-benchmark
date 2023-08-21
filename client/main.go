@@ -17,6 +17,7 @@ import (
 	"github.com/sithumonline/demedia-nostr/keys"
 	"github.com/sithumonline/demedia-nostr/port"
 	"github.com/sithumonline/demedia-nostr/relayer/ql"
+	"github.com/spf13/viper"
 )
 
 func main() {
@@ -61,4 +62,22 @@ func main() {
 	table.SetHeader([]string{"Method", "Load Time", "Response Time"})
 	table.AppendBulk(benchmarkData)
 	table.Render()
+
+	viper.SetConfigName("config")
+	viper.AddConfigPath(".")
+	viper.SetConfigType("yaml")
+	err = viper.ReadInConfig()
+	if err != nil {
+		log.Fatalf("failed to read config file: %v", err)
+	}
+
+	var config models.RunList
+	err = viper.Unmarshal(&config)
+	if err != nil {
+		log.Fatalf("failed to unmarshal config: %v", err)
+	}
+
+	for _, run := range config.Runs {
+		fmt.Println(run.Name, run.Ipfs, run.Rest)
+	}
 }

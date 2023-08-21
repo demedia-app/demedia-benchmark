@@ -1,0 +1,11 @@
+runs:
+- id: 1
+  name: Image 01
+  ipfs: https://pkg.go.dev/static/shared/gopher/airplane-1200x945.svg
+  rest: https://pkg.go.dev/static/shared/gopher/airplane-1200x945.svg
+- id: 2
+  name: Image 01
+  ipfs: https://pkg.go.dev/static/shared/gopher/airplane-1200x945.svg
+  rest: https://pkg.go.dev/static/shared/gopher/airplane-1200x945.svg
+
+# viper golang code for read above config.yaml
