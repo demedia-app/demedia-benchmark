@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
@@ -58,11 +59,6 @@ func main() {
 
 	benchmarkData = append(benchmarkData, []string{"Ql", d[len(d)-1].Title, elapsed.String()})
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Method", "Load Time", "Response Time"})
-	table.AppendBulk(benchmarkData)
-	table.Render()
-
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
 	viper.SetConfigType("yaml")
@@ -78,6 +74,25 @@ func main() {
 	}
 
 	for _, run := range config.Runs {
-		fmt.Println(run.Name, run.Ipfs, run.Rest)
+		rest_start := time.Now()
+		_, err := http.Get(run.Rest)
+		if err != nil {
+			log.Fatalf("failed to fetch rest: %v", err)
+		}
+		rest_elapsed := time.Since(rest_start)
+
+		ipfs_start := time.Now()
+		_, err = http.Get(run.Ipfs)
+		if err != nil {
+			log.Fatalf("failed to fetch ipfs: %v", err)
+		}
+		ipfs_elapsed := time.Since(ipfs_start)
+
+		benchmarkData = append(benchmarkData, []string{run.Name, rest_elapsed.String(), ipfs_elapsed.String()})
 	}
+
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Method", "Load Time", "Response Time"})
+	table.AppendBulk(benchmarkData)
+	table.Render()
 }
