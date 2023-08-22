@@ -5,6 +5,6 @@ runs:
   rest: https://pkg.go.dev/static/shared/gopher/airplane-1200x945.svg
 
 - id: 2
-  name: Image 01
+  name: Image 02
   ipfs: https://ipfs.io/ipfs/QmcZFshahydS7RTuT11fw9BZc7Wto35BvmYgZg4gBd99BM
   rest: https://pkg.go.dev/static/shared/gopher/airplane-1200x945.svg
