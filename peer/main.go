@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
-	"time"
+	"net/http"
 
 	"github.com/sithumonline/demedia-benchmark/models"
+	"github.com/sithumonline/demedia-benchmark/utility"
 
 	gorpc "github.com/libp2p/go-libp2p-gorpc"
 	"github.com/sithumonline/demedia-nostr/host"
@@ -46,13 +48,10 @@ func (t *BridgeService) Ql(ctx context.Context, argType ql.BridgeArgs, replyType
 func (t *BridgeService) getAllItem(replyType *ql.BridgeReply) error {
 	list := make([]models.Todo, 0)
 
-	start := time.Now()
 	if result := t.db.Find(&list); result.Error != nil {
 		log.Printf("failed to find todos: %v", result.Error)
 		return result.Error
 	}
-	elapsed := time.Since(start)
-	list = append(list, models.Todo{Id: "time", Title: elapsed.String()})
 
 	b, err := json.Marshal(list)
 	if err != nil {
@@ -87,11 +86,20 @@ func main() {
 
 	rpcHost := gorpc.NewServer(h, "/p2p/1.0.0")
 
-	db := database("postgres://tenulyil:jJzwdOfsftWnJ9T16zWvW3zxallU-8J0@mahmud.db.elephantsql.com/tenulyil")
+	db := database(utility.EnvOrDefault("DATABASE_URL", "postgres://tenulyil:jJzwdOfsftWnJ9T16zWvW3zxallU-8J0@mahmud.db.elephantsql.com/tenulyil"))
 	bridgeService := newBridgeService(db)
 	if err := rpcHost.Register(bridgeService); err != nil {
 		log.Fatalf("failed to register rpc server: %v", err)
 	}
 
-	select {}
+	http.HandleFunc("/getAllItem", func(w http.ResponseWriter, r *http.Request) {
+		data := ql.BridgeReply{}
+		err := bridgeService.getAllItem(&data)
+		if err != nil {
+			fmt.Fprintf(w, "error: %v", err)
+		}
+		w.Write(data.Data)
+	})
+
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", utility.EnvOrDefault("PORT", "8080")), nil))
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"github.com/sithumonline/demedia-benchmark/models"
+	"github.com/sithumonline/demedia-benchmark/utility"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/sithumonline/demedia-nostr/host"
@@ -20,6 +20,16 @@ import (
 	"github.com/sithumonline/demedia-nostr/relayer/ql"
 	"github.com/spf13/viper"
 )
+
+func call(url string) time.Duration {
+	rest_start := time.Now()
+	_, err := http.Get(url)
+	if err != nil {
+		log.Fatalf("failed to fetch rest: %v", err)
+	}
+	rest_elapsed := time.Since(rest_start)
+	return rest_elapsed
+}
 
 func main() {
 	var benchmarkData [][]string
@@ -38,10 +48,10 @@ func main() {
 	}
 
 	start := time.Now()
-	reply, sandErr := ql.QlCall(h,
+	_, sandErr := ql.QlCall(h,
 		context.Background(),
 		nil,
-		"/ip4/192.168.1.2/tcp/10880/p2p/16Uiu2HAm11tBBtFMubGtVWty12oYHzq58k7p3ZfdPhe24qgKVgX7",
+		utility.EnvOrDefault("PEER_ADDRESS", "/ip4/192.168.1.2/tcp/10880/p2p/16Uiu2HAm11tBBtFMubGtVWty12oYHzq58k7p3ZfdPhe24qgKVgX7"),
 		"BridgeService",
 		"Ql",
 		"getAllItem",
@@ -51,13 +61,9 @@ func main() {
 	}
 	elapsed := time.Since(start)
 
-	var d []models.Todo
-	err = json.Unmarshal(reply.Data, &d)
-	if err != nil {
-		log.Fatalf("failed to unmarshal reply data: %v", err)
-	}
+	data__elapsed := call(utility.EnvOrDefault("PEER_REST_ENDPOINT", "http://localhost:8080/getAllItem"))
 
-	benchmarkData = append(benchmarkData, []string{"Ql", d[len(d)-1].Title, elapsed.String()})
+	benchmarkData = append(benchmarkData, []string{"Get All Item", data__elapsed.String(), elapsed.String()})
 
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
@@ -74,25 +80,14 @@ func main() {
 	}
 
 	for _, run := range config.Runs {
-		rest_start := time.Now()
-		_, err := http.Get(run.Rest)
-		if err != nil {
-			log.Fatalf("failed to fetch rest: %v", err)
-		}
-		rest_elapsed := time.Since(rest_start)
-
-		ipfs_start := time.Now()
-		_, err = http.Get(run.Ipfs)
-		if err != nil {
-			log.Fatalf("failed to fetch ipfs: %v", err)
-		}
-		ipfs_elapsed := time.Since(ipfs_start)
+		rest_elapsed := call(run.Rest)
+		ipfs_elapsed := call(run.Ipfs)
 
 		benchmarkData = append(benchmarkData, []string{run.Name, rest_elapsed.String(), ipfs_elapsed.String()})
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Method", "Load Time", "Response Time"})
+	table.SetHeader([]string{"Method", "Rest", "IPFS/DeMedia"})
 	table.AppendBulk(benchmarkData)
 	table.Render()
 }
