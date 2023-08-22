@@ -10,7 +10,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/sithumonline/demedia-benchmark/database"
 	"github.com/sithumonline/demedia-benchmark/models"
+	"github.com/sithumonline/demedia-benchmark/service"
 	"github.com/sithumonline/demedia-benchmark/util"
 
 	"github.com/olekukonko/tablewriter"
@@ -29,6 +31,21 @@ func call(url string) time.Duration {
 	}
 	rest_elapsed := time.Since(rest_start)
 	return rest_elapsed
+}
+
+func directDatabaseCall() time.Duration {
+	db := database.Database(util.EnvOrDefault("DATABASE_URL", "postgres://tenulyil:jJzwdOfsftWnJ9T16zWvW3zxallU-8J0@mahmud.db.elephantsql.com/tenulyil"))
+	bridgeService := service.NewBridgeService(db)
+	data := ql.BridgeReply{}
+
+	time_start := time.Now()
+	err := bridgeService.GetAllItem(&data)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+	elapsed := time.Since(time_start)
+
+	return elapsed
 }
 
 func main() {
@@ -63,7 +80,11 @@ func main() {
 
 	data__elapsed := call(util.EnvOrDefault("PEER_REST_ENDPOINT", "http://localhost:8080/getAllItem"))
 
-	benchmarkData = append(benchmarkData, []string{"Get All Item", data__elapsed.String(), elapsed.String()})
+	benchmarkData = append(benchmarkData, []string{"REST vs DeMedia", data__elapsed.String(), elapsed.String()})
+
+	database_elapsed := directDatabaseCall()
+	benchmarkData = append(benchmarkData, []string{"Direct vs DeMedia", database_elapsed.String(), elapsed.String()})
+	benchmarkData = append(benchmarkData, []string{"Direct vs REST", database_elapsed.String(), data__elapsed.String()})
 
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
