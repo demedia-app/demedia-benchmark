@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/sithumonline/demedia-benchmark/models"
-	"github.com/sithumonline/demedia-benchmark/utility"
+	"github.com/sithumonline/demedia-benchmark/util"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/sithumonline/demedia-nostr/host"
@@ -51,7 +51,7 @@ func main() {
 	_, sandErr := ql.QlCall(h,
 		context.Background(),
 		nil,
-		utility.EnvOrDefault("PEER_ADDRESS", "/ip4/192.168.1.2/tcp/10880/p2p/16Uiu2HAm11tBBtFMubGtVWty12oYHzq58k7p3ZfdPhe24qgKVgX7"),
+		util.EnvOrDefault("PEER_ADDRESS", "/ip4/192.168.1.2/tcp/10880/p2p/16Uiu2HAm11tBBtFMubGtVWty12oYHzq58k7p3ZfdPhe24qgKVgX7"),
 		"BridgeService",
 		"Ql",
 		"getAllItem",
@@ -61,7 +61,7 @@ func main() {
 	}
 	elapsed := time.Since(start)
 
-	data__elapsed := call(utility.EnvOrDefault("PEER_REST_ENDPOINT", "http://localhost:8080/getAllItem"))
+	data__elapsed := call(util.EnvOrDefault("PEER_REST_ENDPOINT", "http://localhost:8080/getAllItem"))
 
 	benchmarkData = append(benchmarkData, []string{"Get All Item", data__elapsed.String(), elapsed.String()})
 
