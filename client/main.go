@@ -78,13 +78,13 @@ func main() {
 	}
 	elapsed := time.Since(start)
 
-	data__elapsed := call(util.EnvOrDefault("PEER_REST_ENDPOINT", "http://localhost:8080/getAllItem"))
+	data_elapsed := call(util.EnvOrDefault("PEER_REST_ENDPOINT", "http://localhost:8080/getAllItem"))
 
-	benchmarkData = append(benchmarkData, []string{"REST vs DeMedia", data__elapsed.String(), elapsed.String()})
+	benchmarkData = append(benchmarkData, []string{"REST API Call vs DeMedia API Call", data_elapsed.String(), elapsed.String()})
 
 	database_elapsed := directDatabaseCall()
-	benchmarkData = append(benchmarkData, []string{"Direct vs DeMedia", database_elapsed.String(), elapsed.String()})
-	benchmarkData = append(benchmarkData, []string{"Direct vs REST", database_elapsed.String(), data__elapsed.String()})
+	benchmarkData = append(benchmarkData, []string{"Direct DB Fetch vs DB Fetch Through DeMedia", database_elapsed.String(), elapsed.String()})
+	benchmarkData = append(benchmarkData, []string{"Direct DB Fetch vs REST API Call", database_elapsed.String(), data_elapsed.String()})
 
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
@@ -104,7 +104,7 @@ func main() {
 		rest_elapsed := call(run.Rest)
 		ipfs_elapsed := call(run.Ipfs)
 
-		benchmarkData = append(benchmarkData, []string{run.Name, rest_elapsed.String(), ipfs_elapsed.String()})
+		benchmarkData = append(benchmarkData, []string{fmt.Sprintf("Time Elapsed To Fetch %s", run.Name), rest_elapsed.String(), ipfs_elapsed.String()})
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
